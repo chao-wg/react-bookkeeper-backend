@@ -6,25 +6,25 @@ dotenv.config();
 
 const router = express.Router();
 
-// 创建一个SMTP客户端配置
+// Create an SMTP client configuration
 const config = {
   service: "QQ",
   auth: {
-    // 发件人邮箱账号
+    // sender email address
     user: 'no-reply73@qq.com',
-    //发件人邮箱的授权码 这里可以通过qq邮箱获取 并且不唯一
+    // Authorization code for sender email address
     pass: 'scitxyzelaveiiaf'
   }
 }
-// 创建一个邮件发送器
+// Create a mail sender
 const transporter = nodemailer.createTransport(config);
 
-// 发送验证码
+// send validation code
 const sendValidationCode = (email) => {
-  // 生成6位随机验证码
+  // Generate a 6-digit random verification code
   const validationCode = Math.floor(100000 + Math.random() * 900000);
 
-  // 设置邮件选项
+  // Set mail options
   const mailOptions = {
     from: 'no-reply73@qq.com',
     to: email,
@@ -32,7 +32,7 @@ const sendValidationCode = (email) => {
     text: `Your verification code is: ${validationCode}`
   };
 
-  // 发送邮件
+  // Send mail
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log(error);
@@ -43,25 +43,25 @@ const sendValidationCode = (email) => {
 }
 
 // TODO
-// validateEmailAndCode() 函数用于验证邮箱和验证码
+// validateEmailAndCode() function is used to verify email and verification code
 function validateEmailAndCode(email, code) {
-  // 验证逻辑
+  // Verification logic
   return true;
 }
 
-// POST 请求处理程序
+// POST request handler
 router.post('/', (req, res) => {
   const {email, code} = req.body;
-  //发送邮件
+  // send validation code
   sendValidationCode(email);
-  // 进行邮箱和验证码的验证，假设验证函数为 validateEmailAndCode()
+  // Verify email and verification code using validateEmailAndCode()
   if (validateEmailAndCode(email, code)) {
-    // 验证通过，生成 JWT
+    // Verification passed, generate JWT
     const token = jwt.sign({ email }, process.env.JWT_SECRET);
-    // 将 JWT 返回给客户端
+    // Return JWT to the client
     res.json({ token });
   } else {
-    // 验证未通过
+    // Verification failed
     res.status(401).json({ error: 'Invalid email or code' });
   }
 });

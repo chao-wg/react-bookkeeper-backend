@@ -6,7 +6,7 @@ import cors from "cors";
 const app = express();
 
 app.use(express.json()); // for parsing application/json
-app.use(cors()); // Use cors middleware
+app.use(cors()); // Use cors middleware to allow cross-origin requests
 
 //
 app.use('/api/v1/session', sessionRouter);
