@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 const router = express.Router();
 
-// TODO
 // validateEmailAndCode() function is used to verify email and verification code
 async function validateEmailAndCode(email, code) {
   try {
