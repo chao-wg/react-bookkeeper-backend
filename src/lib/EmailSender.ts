@@ -1,5 +1,9 @@
 import nodemailer from "nodemailer";
 
+type MailConfig = {
+  to: string;
+  subject: string;
+}
 
 // Create an SMTP client configuration
 const config = {
@@ -15,7 +19,8 @@ const config = {
 const transporter = nodemailer.createTransport(config);
 
 // send validation code
-export function sendValidationCode(to, subject) {
+export function sendValidationCode(mailConfig: MailConfig) {
+  const {to, subject} = mailConfig;
   // Generate a 6-digit random verification code
   const validationCode = Math.floor(100000 + Math.random() * 900000);
 

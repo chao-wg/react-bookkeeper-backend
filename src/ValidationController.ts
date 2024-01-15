@@ -1,7 +1,6 @@
 import express from "express";
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import {sendValidationCode} from "./EmailSender.js";
+import {sendValidationCode} from "./lib/EmailSender.js";
 import {PrismaClient} from "@prisma/client";
 dotenv.config();
 
@@ -12,7 +11,7 @@ const prisma = new PrismaClient();
 router.post('/', async (req, res) => {
   const {email} = req.body;
   // send validation code
-  const generatedCode = sendValidationCode(email,'Your verification code')
+  const generatedCode = sendValidationCode({to: email, subject: 'Your verification code'})
   // Verify email and verification code using validateEmailAndCode()
   if (generatedCode) {
     // insert a record in table user_validation:bookkeeper through Prisma

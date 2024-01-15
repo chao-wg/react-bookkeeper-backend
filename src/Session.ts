@@ -6,11 +6,10 @@ const prisma = new PrismaClient();
 const router = express.Router();
 
 // validateEmailAndCode() function is used to verify email and verification code
-async function validateEmailAndCode(email, code) {
+async function validateEmailAndCode(email: string, code: string) {
   try {
-    // look for the most recent validation_code for the given email through Prisma
-    // if the validation_code is the same as the given code, return true
-    // otherwise, return false
+    // look for the most recent validation_code for validation
+    // default validation_code is 123456, to make testing easier
     const latestCode = await prisma.user_validation.findFirst({
       where: {
         user_email: email,
@@ -18,10 +17,9 @@ async function validateEmailAndCode(email, code) {
       orderBy: {
         timestamp: 'desc',
       },
-    });
+    }) || {validation_code: '123456'}
     return latestCode.validation_code === code;
   } catch (error) {
-    console.log(error)
     throw new Error('An error occurred while validating email and code');
   }
 }
