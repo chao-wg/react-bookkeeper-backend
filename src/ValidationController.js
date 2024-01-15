@@ -1,68 +1,68 @@
 import express from "express";
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import {sendValidationCode} from "./EmailSender.js";
+import {PrismaClient} from "@prisma/client";
 dotenv.config();
 
 const router = express.Router();
-
-// Create an SMTP client configuration
-const config = {
-  service: "QQ",
-  auth: {
-    // sender email address
-    user: 'no-reply73@qq.com',
-    // Authorization code for sender email address
-    pass: 'scitxyzelaveiiaf'
-  }
-}
-// Create a mail sender
-const transporter = nodemailer.createTransport(config);
-
-// send validation code
-const sendValidationCode = (email) => {
-  // Generate a 6-digit random verification code
-  const validationCode = Math.floor(100000 + Math.random() * 900000);
-
-  // Set mail options
-  const mailOptions = {
-    from: 'no-reply73@qq.com',
-    to: email,
-    subject: 'Verification Code',
-    text: `Your verification code is: ${validationCode}`
-  };
-
-  // Send mail
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
-  });
-}
+const prisma = new PrismaClient();
 
 // TODO
 // validateEmailAndCode() function is used to verify email and verification code
-function validateEmailAndCode(email, code) {
-  // Verification logic
+async function validateEmailAndCode(email, code) {
+  // Asynchronous verification logic
+  // Example: querying a database to check if the code is valid for the given email
+  // const isValid = await database.query('SELECT * FROM verification_codes WHERE email = ? AND code = ?', [email, code]);
+  // return isValid;
   return true;
 }
 
+
 // POST request handler
-router.post('/', (req, res) => {
-  const {email, code} = req.body;
+router.post('/', async (req, res) => {
+  const {email} = req.body;
   // send validation code
-  sendValidationCode(email);
+  const generatedCode = sendValidationCode(email,'Your verification code')
   // Verify email and verification code using validateEmailAndCode()
-  if (validateEmailAndCode(email, code)) {
-    // Verification passed, generate JWT
-    const token = jwt.sign({ email }, process.env.JWT_SECRET);
-    // Return JWT to the client
-    res.json({ token });
+  if (generatedCode) {
+    // insert a record in table user_validation:bookkeeper through Prisma
+    async function main() {
+      const user = await prisma.user_validation.create({
+        data: {
+          user_email: email,
+          validation_code: generatedCode,
+        },
+      })
+      console.log(user)
+    }
+    main()
+      .then(async () => {
+        await prisma.$disconnect()
+      })
+      .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+        process.exit(1)
+      })
+    const userEnteredCode = req.body.code;
+    try {
+      const isValid = await validateEmailAndCode(email, userEnteredCode);
+      if (isValid) {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          throw new Error('No JWT secret found');
+        }
+        const token = jwt.sign({email}, secret);
+        res.json({token});
+      } else {
+        res.status(400).json({message: 'Invalid code'});
+      }
+    } catch (error) {
+      res.status(500).json({error: 'An error occurred during verification'});
+    }
   } else {
-    // Verification failed
-    res.status(401).json({ error: 'Invalid email or code' });
+    res.status(500).json({error: 'Failed to send verification code'});
   }
 });
 

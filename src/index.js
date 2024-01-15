@@ -2,7 +2,6 @@ import express from 'express';
 import sessionRouter from './Session.js';
 import validationController from './ValidationController.js';
 import cors from "cors";
-
 const app = express();
 
 app.use(express.json()); // for parsing application/json
