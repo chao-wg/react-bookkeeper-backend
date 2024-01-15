@@ -8,17 +8,6 @@ dotenv.config();
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// TODO
-// validateEmailAndCode() function is used to verify email and verification code
-async function validateEmailAndCode(email, code) {
-  // Asynchronous verification logic
-  // Example: querying a database to check if the code is valid for the given email
-  // const isValid = await database.query('SELECT * FROM verification_codes WHERE email = ? AND code = ?', [email, code]);
-  // return isValid;
-  return true;
-}
-
-
 // POST request handler
 router.post('/', async (req, res) => {
   const {email} = req.body;
@@ -45,22 +34,21 @@ router.post('/', async (req, res) => {
         await prisma.$disconnect()
         process.exit(1)
       })
-    const userEnteredCode = req.body.code;
-    try {
-      const isValid = await validateEmailAndCode(email, userEnteredCode);
-      if (isValid) {
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-          throw new Error('No JWT secret found');
-        }
-        const token = jwt.sign({email}, secret);
-        res.json({token});
-      } else {
-        res.status(400).json({message: 'Invalid code'});
-      }
-    } catch (error) {
-      res.status(500).json({error: 'An error occurred during verification'});
-    }
+    res.set({
+      'X-Frame-Options': 'SAMEORIGIN',
+      'X-XSS-Protection': '0',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Download-Options': 'noopen',
+      'X-Permitted-Cross-Domain-Policies': 'none',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Content-Type': 'application/json; charset=utf-8',
+      'Vary': 'Accept, Origin',
+      'ETag': 'W/"29886053549dadaf0204b8c1f407ae9e"',
+      'Cache-Control': 'max-age=0, private, must-revalidate',
+      'X-Request-Id': '56303a92-de36-45de-a4cd-1aa06a8e9ff6',
+      'X-Runtime': '0.007657',
+      'Content-Length': '118'
+    });
   } else {
     res.status(500).json({error: 'Failed to send verification code'});
   }

@@ -1,27 +1,51 @@
 import express from 'express';
+import jwt from "jsonwebtoken";
+import {PrismaClient} from "@prisma/client";
+const prisma = new PrismaClient();
 
 const router = express.Router();
 
-router.post('/', (req, res) => {
-    const jwtToken = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyODMsImV4cCI6MTY5NDYwMjIwNH0.P7RLF9hlyj7LNJIIukGFyYcPhy4j69_AsFk_U0SQg8w';
-
-    res.set({
-        'X-Frame-Options': 'SAMEORIGIN',
-        'X-XSS-Protection': '0',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Download-Options': 'noopen',
-        'X-Permitted-Cross-Domain-Policies': 'none',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Content-Type': 'application/json; charset=utf-8',
-        'Vary': 'Accept, Origin',
-        'ETag': 'W/"29886053549dadaf0204b8c1f407ae9e"',
-        'Cache-Control': 'max-age=0, private, must-revalidate',
-        'X-Request-Id': '56303a92-de36-45de-a4cd-1aa06a8e9ff6',
-        'X-Runtime': '0.007657',
-        'Content-Length': '118'
+// TODO
+// validateEmailAndCode() function is used to verify email and verification code
+async function validateEmailAndCode(email, code) {
+  try {
+    // look for the most recent validation_code for the given email through Prisma
+    // if the validation_code is the same as the given code, return true
+    // otherwise, return false
+    const latestCode = await prisma.user_validation.findFirst({
+      where: {
+        user_email: email,
+      },
+      orderBy: {
+        timestamp: 'desc',
+      },
     });
+    return latestCode.validation_code === code;
+  } catch (error) {
+    console.log(error)
+    throw new Error('An error occurred while validating email and code');
+  }
+}
 
-    res.status(200).json({ jwt: jwtToken });
+router.post('/', async (req, res) => {
+  const { email, code } = req.body; // Extract email and code from request body
+  try {
+    const isValid = await validateEmailAndCode(email, code);
+    if (isValid) {
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        throw new Error('No JWT secret found');
+      }
+      const token = jwt.sign({email}, secret);
+      res.status(200).json({jwt: token});
+    } else {
+      res.status(422).json({"errors":{"email":["Email or code is invalid"]}});
+    }
+  } catch (error) {
+    res.status(500).json({error: 'An error occurred during verification'});
+  } finally {
+    await prisma.$disconnect(); // Disconnect the Prisma client after all database operations are completed
+  }
 });
 
 export default router;
