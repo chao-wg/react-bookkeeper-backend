@@ -12,7 +12,7 @@ router.post('/', async (req, res) => {
   const {email} = req.body;
   // send validation code
   const generatedCode = sendValidationCode({to: email, subject: 'Your verification code'})
-  // Verify email and verification code using validateEmailAndCode()
+  // If successfully sent, insert a record in table user_validation:bookkeeper through Prisma
   if (generatedCode) {
     // insert a record in table user_validation:bookkeeper through Prisma
     async function main() {
