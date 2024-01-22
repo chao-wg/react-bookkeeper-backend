@@ -1,6 +1,8 @@
 import express from 'express';
 import jwt from "jsonwebtoken";
 import {PrismaClient} from "@prisma/client";
+import {insertUser} from "./lib/InsertUser.js";
+
 const prisma = new PrismaClient();
 
 const router = express.Router();
@@ -18,14 +20,15 @@ async function validateEmailAndCode(email: string, code: string) {
         timestamp: 'desc',
       },
     }) || {validation_code: '123456'}
-    return latestCode.validation_code === code;
+    // TODO: this for testing purpose only, remove it in build
+    return latestCode.validation_code === code || code === '123456';
   } catch (error) {
     throw new Error('An error occurred while validating email and code');
   }
 }
 
 router.post('/', async (req, res) => {
-  const { email, code } = req.body; // Extract email and code from request body
+  const {email, code} = req.body; // Extract email and code from request body
   try {
     const isValid = await validateEmailAndCode(email, code);
     if (isValid) {
@@ -35,8 +38,10 @@ router.post('/', async (req, res) => {
       }
       const token = jwt.sign({email}, secret);
       res.status(200).json({jwt: token});
+      // insert user into user_info if not validation succeeded
+      await insertUser({email})
     } else {
-      res.status(422).json({"errors":{"email":["Email or code is invalid"]}});
+      res.status(422).json({"errors": {"email": ["Email or code is invalid"]}});
     }
   } catch (error) {
     res.status(500).json({error: 'An error occurred during verification'});

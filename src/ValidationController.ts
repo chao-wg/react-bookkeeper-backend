@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from 'dotenv';
 import {sendValidationCode} from "./lib/EmailSender.js";
 import {PrismaClient} from "@prisma/client";
+
 dotenv.config();
 
 const router = express.Router();
@@ -24,6 +25,7 @@ router.post('/', async (req, res) => {
       })
       console.log(user)
     }
+
     main()
       .then(async () => {
         await prisma.$disconnect()
@@ -37,16 +39,12 @@ router.post('/', async (req, res) => {
       'X-Frame-Options': 'SAMEORIGIN',
       'X-XSS-Protection': '0',
       'X-Content-Type-Options': 'nosniff',
-      'X-Download-Options': 'noopen',
-      'X-Permitted-Cross-Domain-Policies': 'none',
+      'X-Download-Options': 'noopen', //todo: what?
+      'X-Permitted-Cross-Domain-Policies': 'none', //todo: what?
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Content-Type': 'application/json; charset=utf-8',
       'Vary': 'Accept, Origin',
-      'ETag': 'W/"29886053549dadaf0204b8c1f407ae9e"',
       'Cache-Control': 'max-age=0, private, must-revalidate',
-      'X-Request-Id': '56303a92-de36-45de-a4cd-1aa06a8e9ff6',
-      'X-Runtime': '0.007657',
-      'Content-Length': '118'
     });
   } else {
     res.status(500).json({error: 'Failed to send verification code'});
