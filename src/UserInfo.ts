@@ -18,8 +18,7 @@ router.get('/', async (req, res) => {
     if (!secret) {
       throw new Error('No JWT secret found');
     }
-    const decoded = jwt.verify(token, secret) as { email: string };
-    email = decoded.email;
+    const email = (jwt.verify(token, secret) as { email: string }).email;
   } catch (error) {
     return res.status(401).json({error: 'Validation failed.(Message from server)'});
   }
@@ -33,7 +32,7 @@ router.get('/', async (req, res) => {
     if (userInfo) {
       return res.status(200).json(userInfo);
     } else {
-      return res.status(404).json({error: 'User not found.(Message from server)'});
+      return res.status(401).json({error: 'User not found.(Message from server)'});
     }
   } catch (error) {
     return res.status(500).json({error: 'An error occurred while fetching user info.(Message from server)'});
