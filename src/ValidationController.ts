@@ -35,17 +35,7 @@ router.post('/', async (req, res) => {
         await prisma.$disconnect()
         process.exit(1)
       })
-    res.set({
-      'X-Frame-Options': 'SAMEORIGIN',
-      'X-XSS-Protection': '0',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Download-Options': 'noopen', //todo: what?
-      'X-Permitted-Cross-Domain-Policies': 'none', //todo: what?
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Content-Type': 'application/json; charset=utf-8',
-      'Vary': 'Accept, Origin',
-      'Cache-Control': 'max-age=0, private, must-revalidate',
-    });
+    res.set(process.env.RES_HEADERS);
   } else {
     res.status(500).json({error: 'Failed to send verification code'});
   }

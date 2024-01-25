@@ -6,11 +6,15 @@ const prisma = new PrismaClient();
 
 const router = express.Router();
 
-async function getUserByJWT(token: string) {
+async function getUserByJWT(req: express.Request) {
   try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return null;
+    }
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      throw new Error('No JWT secret found');
+      return null;
     }
     const email = (jwt.verify(token, secret) as { email: string }).email;
     return await prisma.user_info.findUnique({
@@ -28,11 +32,7 @@ router.post('/', async (req, res) => {
   const {kind, sign, name} = req.body;
   try {
     // extract jwt token from header
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({error: 'Haven\'t logged in yet.(Message from server)'});
-    }
-    const user = await getUserByJWT(token);
+    const user = await getUserByJWT(req);
     if (!user) {
       return res.status(401).json({error: 'User not found.(Message from server)'});
     }
@@ -48,14 +48,13 @@ router.post('/', async (req, res) => {
         }
       }
     )
-    return res.status(288).json(tag);
+    return res.set(process.env.RES_HEADERS).status(200).json(tag);
   } catch (error) {
     return res.status(401).json({error: 'Validation failed.(Message from server)'});
   } finally {
     await prisma.$disconnect();
   }
 })
-export default router;
 
 router.get('/', async (req, res) => {
   const {page, kind} = req.query;
@@ -69,16 +68,12 @@ router.get('/', async (req, res) => {
 
   try {
     // get user info
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({error: 'Haven\'t logged in yet.(Message from server)'});
-    }
-    const user = await getUserByJWT(token);
+    const user = await getUserByJWT(req);
     if (!user) {
       return res.status(401).json({error: 'User not found.(Message from server)'});
     }
     // push tags stream
-    const tagCount = await prisma.tags_collection.count({
+    const tagsCount = await prisma.tags_collection.count({
       where: {
         user_id: user.id,
         kind: kind as 'expenses' || 'income',
@@ -92,18 +87,92 @@ router.get('/', async (req, res) => {
       skip: offset,
       take: itemsPerPage,
     });
-    const body = {
+    const responseBody = {
       resources: tags,
       pager: {
         page,
         per_page: itemsPerPage,
-        count: tagCount
+        count: tagsCount
       }
     }
-    return res.status(200).json(body);
+    return res.set(process.env.RES_HEADERS).status(200).json(responseBody);
   } catch (error) {
-    return res.status(500).json({error: 'An error occurred while fetching tags.'});
+    return res.status(500).json({error: 'An error occurred while fetching tags.(Message from server)'});
   } finally {
     await prisma.$disconnect();
   }
 });
+
+router.get('/:id', async (req, res) => {
+  const {id} = req.params;
+  try {
+    // get user info
+    const user = await getUserByJWT(req);
+    if (!user) {
+      return res.status(401).json({error: 'User not found.(Message from server)'});
+    }
+
+    // fetch the tag with the provided id
+    const tag = await prisma.tags_collection.findFirst({
+      where: {
+        user_id: user.id,
+        id: Number(id),
+      },
+    });
+
+    if (!tag) {
+      return res.status(404).json({error: 'Tag not found.(Message from server)'});
+    }
+
+    return res.set(process.env.RES_HEADERS).status(200).json(tag);
+  } catch (error) {
+    return res.status(500).json({error: 'An error occurred while fetching the tag.(Message from server)'});
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+router.patch('/:id', async (req, res) => {
+  const {id} = req.params;
+  const {sign, name} = req.body;
+
+  try {
+    // get user info
+    const user = await getUserByJWT(req);
+    if (!user) {
+      return res.status(401).json({error: 'User not found.(Message from server)'});
+    }
+    // update the tag
+    const updatedTag = await prisma.tags_collection.update({
+      where: {id: Number(id)},
+      data: {sign, name, updated_at: new Date()},
+    });
+    return res.set(process.env.RES_HEADERS).status(200).json(updatedTag);
+  } catch (error) {
+    return res.status(500).json({error: 'An error occurred while updating the tag.(Message from server)'});
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  const {id} = req.params;
+  try {
+    // get user info
+    const user = await getUserByJWT(req);
+    if (!user) {
+      return res.status(401).json({error: 'User not found.(Message from server)'});
+    }
+    // delete the tag
+    await prisma.tags_collection.delete({
+      where: {id: Number(id)},
+    });
+    return res.set(process.env.RES_HEADERS).status(200).json({message: 'Tag deleted successfully.'});
+  } catch (error) {
+    return res.status(500).json({error: 'An error occurred while deleting the tag.(Message from server)'});
+  } finally {
+    await prisma.$disconnect();
+  }
+})
+
+export default router;

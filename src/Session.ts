@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
         throw new Error('No JWT secret found');
       }
       const token = jwt.sign({email}, secret);
-      res.status(200).json({jwt: token});
+      res.set(process.env.RES_HEADERS).status(200).json({jwt: token});
       // insert user into user_info if not validation succeeded
       await insertUser({email})
     } else {
