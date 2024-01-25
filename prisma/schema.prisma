@@ -22,6 +22,7 @@ model user_info {
   created_at DateTime          @default(now()) @db.Timestamptz(6)
   updated_at DateTime          @default(now()) @db.Timestamptz(6)
   tags       tags_collection[]
+  accounts   accounts[]
 }
 
 enum Kind {
@@ -39,4 +40,18 @@ model tags_collection {
   updated_at DateTime  @default(now()) @db.Timestamptz(6)
   kind       Kind
   user       user_info @relation(fields: [user_id], references: [id])
+}
+
+model accounts {
+  id          Int       @id @default(autoincrement())
+  user_id     Int
+  amount      Int
+  note        String?
+  tag_ids     Int[]
+  happened_at DateTime
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  kind        Kind
+  deleted_at  DateTime? @db.Timestamptz(6)
+  user        user_info @relation(fields: [user_id], references: [id])
 }

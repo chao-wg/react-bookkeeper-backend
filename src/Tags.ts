@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 const router = express.Router();
 
-async function getUserByJWT(req: express.Request) {
+export async function getUserByJWT(req: express.Request) {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
@@ -31,7 +31,6 @@ async function getUserByJWT(req: express.Request) {
 router.post('/', async (req, res) => {
   const {kind, sign, name} = req.body;
   try {
-    // extract jwt token from header
     const user = await getUserByJWT(req);
     if (!user) {
       return res.status(401).json({error: 'User not found.(Message from server)'});
@@ -48,7 +47,10 @@ router.post('/', async (req, res) => {
         }
       }
     )
-    return res.set(process.env.RES_HEADERS).status(200).json(tag);
+    const responseBody = {
+      "resource": tag
+    }
+    return res.set(process.env.RES_HEADERS).status(200).json(responseBody);
   } catch (error) {
     return res.status(401).json({error: 'Validation failed.(Message from server)'});
   } finally {

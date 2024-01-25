@@ -1,30 +1,27 @@
 import {PrismaClient} from "@prisma/client";
-import {faker} from '@faker-js/faker'
+import {faker} from "@faker-js/faker";
 
 const prisma = new PrismaClient();
 
-function getRandomKind() {
-  return Math.random() < 0.5 ? 'income' : 'expenses';
-}
+async function createRandomAccounts() {
+  for (let i = 0; i < 15; i++) {
 
-async function generateRandomRecords() {
-  for (let i = 0; i < 10; i++) {
-    const name = faker.lorem.word();
-    const sign = faker.internet.emoji()
-    const kind = getRandomKind();
-
-    await prisma.tags_collection.create({
+    await prisma.accounts.create({
       data: {
         user_id: 2,
-        name: name,
-        sign: sign,
-        kind: kind,
+        amount: faker.number.int({min: 1, max: 999999}), // Random amount
+        note: faker.lorem.slug({min: 2, max: 9}), // Random note
+        tag_ids: [faker.number.int({min: 145, max: 159})], // Random tag id
+        happened_at: new Date(), // Current date
+        kind: 'expenses',
       },
     });
   }
+
+  await prisma.$disconnect();
 }
 
-generateRandomRecords().catch(e => {
+createRandomAccounts().catch(e => {
   console.error(e);
   process.exit(1);
 });

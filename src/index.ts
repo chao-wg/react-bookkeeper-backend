@@ -3,6 +3,7 @@ import sessionRouter from './Session.js';
 import validationController from './ValidationController.js';
 import userInfo from './UserInfo.js';
 import tagsActions from './Tags.js';
+import accountsActions from './Accounts.js';
 import cors from "cors";
 
 const app = express();
@@ -15,6 +16,7 @@ app.use('/api/v1/session', sessionRouter);
 app.use('/api/v1/validation_codes', validationController);
 app.use('/api/v1/me', userInfo);
 app.use('/api/v1/tags', tagsActions);
+app.use('/api/v1/items', accountsActions);
 
 
 const port = process.env.PORT || 3000;
