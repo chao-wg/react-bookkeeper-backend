@@ -113,4 +113,87 @@ router.get('/', async (req, res) => {
   }
 })
 
+// handling requesting for balance of a period of time: GET /api/v1/items/balance
+router.get('/balance', async (req, res) => {
+  const {happened_after, happened_before} = req.query;
+  let whereClause: WhereClause = {};
+  try {
+    // get user info
+    const user = await getUserByJWT(req);
+    if (!user) {
+      return res.status(401).json({error: 'User not found.(Message from server)'});
+    }
+    if (!happened_after || !happened_before) {
+      return null;
+    }
+    const utc_start = isoStandardize(happened_after as string)
+    const utc_end = isoStandardize(happened_before as string)
+    // calculate income in a period
+    const income = await prisma.accounts.aggregate({
+      where: {
+        user_id: user.id,
+        kind: 'income',
+        happened_at: {
+          gte: utc_start,
+          lte: utc_end
+        }
+      },
+      _sum: {
+        amount: true
+      }
+    })
+    // calculate expenses in a period
+    const expense = await prisma.accounts.aggregate({
+      where: {
+        user_id: user.id,
+        kind: 'expenses',
+        happened_at: {
+          gte: utc_start,
+          lte: utc_end
+        }
+      },
+      _sum: {
+        amount: true
+      }
+    })
+    const balance = (income?._sum.amount || 0) - (expense._sum.amount || 0)
+    const responseBody = {
+      income: income._sum.amount || 0,
+      expenses: expense._sum.amount || 0,
+      balance: balance
+    }
+    res.status(200).json(responseBody);
+  } catch (error) {
+    return res.status(500).json({error: 'An error occurred while fetching accounts.(Message from server)'});
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+// handling the delete request
+router.delete('/:id', async (req, res) => {
+  const {id} = req.params;
+  try {
+    const account = await prisma.accounts.delete({
+      where: {
+        id: Number(id)
+      },
+      include: {
+        tag: true
+      }
+    })
+    const responseBody = {
+      "resource": {
+        ...account,
+        "tag": account.tag
+      }
+    }
+    return res.status(200).json(responseBody);
+  } catch (error) {
+    return res.status(500).json({error: 'An error occurred while deleting account.(Message from server)'});
+  } finally {
+    await prisma.$disconnect();
+  }
+})
+
 export default router;
