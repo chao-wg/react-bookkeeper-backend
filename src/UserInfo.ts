@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
       },
     });
     if (userInfo) {
-      return res.set(process.env.RES_HEADERS).status(200).json(userInfo);
+      return res.status(200).json(userInfo);
     } else {
       return res.status(401).json({error: 'User not found.(Message from server)'});
     }

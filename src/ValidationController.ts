@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
         await prisma.$disconnect()
         process.exit(1)
       })
-    res.set(process.env.RES_HEADERS);
+    res.status(200).json({success: true});
   } else {
     res.status(500).json({error: 'Failed to send verification code'});
   }

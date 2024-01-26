@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
     const responseBody = {
       "resource": tag
     }
-    return res.set(process.env.RES_HEADERS).status(200).json(responseBody);
+    return res.status(200).json(responseBody);
   } catch (error) {
     return res.status(401).json({error: 'Validation failed.(Message from server)'});
   } finally {
@@ -97,7 +97,7 @@ router.get('/', async (req, res) => {
         count: tagsCount
       }
     }
-    return res.set(process.env.RES_HEADERS).status(200).json(responseBody);
+    return res.status(200).json(responseBody);
   } catch (error) {
     return res.status(500).json({error: 'An error occurred while fetching tags.(Message from server)'});
   } finally {
@@ -126,7 +126,7 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({error: 'Tag not found.(Message from server)'});
     }
 
-    return res.set(process.env.RES_HEADERS).status(200).json(tag);
+    return res.status(200).json(tag);
   } catch (error) {
     return res.status(500).json({error: 'An error occurred while fetching the tag.(Message from server)'});
   } finally {
@@ -149,7 +149,7 @@ router.patch('/:id', async (req, res) => {
       where: {id: Number(id)},
       data: {sign, name, updated_at: new Date()},
     });
-    return res.set(process.env.RES_HEADERS).status(200).json(updatedTag);
+    return res.status(200).json(updatedTag);
   } catch (error) {
     return res.status(500).json({error: 'An error occurred while updating the tag.(Message from server)'});
   } finally {
@@ -169,7 +169,7 @@ router.delete('/:id', async (req, res) => {
     await prisma.tags_collection.delete({
       where: {id: Number(id)},
     });
-    return res.set(process.env.RES_HEADERS).status(200).json({message: 'Tag deleted successfully.'});
+    return res.status(200).json({message: 'Tag deleted successfully.'});
   } catch (error) {
     return res.status(500).json({error: 'An error occurred while deleting the tag.(Message from server)'});
   } finally {
