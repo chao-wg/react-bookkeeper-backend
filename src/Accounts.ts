@@ -196,4 +196,82 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
+// handling the GET summary request
+type SummaryItem = {
+  date: string;
+  tag?: any;
+  total_amount: bigint;
+};
+router.get('/summary', async (req, res) => {
+  const {happened_after, happened_before, kind, group_by} = req.query;
+  try {
+    // get user info
+    const user = await getUserByJWT(req);
+    if (!user) {
+      return res.status(401).json({error: 'User not found.(Message from server)'});
+    }
+    if (!happened_after || !happened_before || !kind || !group_by) {
+      return null;
+    }
+    const utc_start = isoStandardize(happened_after as string)
+    const utc_end = isoStandardize(happened_before as string)
+    if (group_by === 'tag_id') {
+      // calculate the sum of amount of each tag in a period
+      const summary = await prisma.accounts.groupBy({
+        by: ['tag_id'],
+        where: {
+          user_id: user.id,
+          kind: kind as 'income' | 'expenses',
+          happened_at: {
+            gte: utc_start,
+            lte: utc_end
+          }
+        },
+        _sum: {
+          amount: true
+        }
+      })
+      const summaryWithTags = await Promise.all(summary.map(async (item) => {
+        const tag = await prisma.tags_collection.findUnique({
+          where: {
+            id: item.tag_id
+          }
+        })
+        return {
+          'tag_id': item.tag_id,
+          'tag': tag,
+          'amount': item._sum.amount
+        }
+      }))
+      const responseBody = {
+        groups: summaryWithTags,
+        total: summaryWithTags.reduce((acc, cur) => acc + (cur.amount || 0), 0)
+      }
+      return res.status(200).json(responseBody);
+    } else if (group_by === 'happened_at') {
+      // calculate the sum of amount of each day in a period
+      const summary: SummaryItem[] = await prisma.$queryRaw`
+        SELECT TO_CHAR(DATE(happened_at), 'YYYY-MM-DD') as date, SUM(amount) as total_amount
+        FROM accounts
+        WHERE user_id = ${user.id} AND kind = ${kind}::"Kind" AND happened_at BETWEEN ${utc_start} AND ${utc_end}
+        GROUP BY DATE(happened_at)
+      `;
+      const responseBody = {
+        groups: summary.map((item: any) => ({
+          happened_at: item.date,
+          tag: null,
+          amount: item.total_amount.toString()
+        })),
+        total: summary.reduce((acc, cur) => acc + Number(cur.total_amount || 0), 0).toString() // convert BigInt to string
+      }
+      return res.status(200).json(responseBody);
+    }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({error: 'An error occurred while fetching accounts.(Message from server)'});
+  } finally {
+    await prisma.$disconnect();
+  }
+})
+
 export default router;
