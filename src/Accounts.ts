@@ -18,6 +18,7 @@ function isoStandardize(date: string) {
 
 const router = express.Router();
 
+// handling the POST request for creating a new item
 router.post('/', async (req, res) => {
   const {amount, kind, happened_at, tag_id} = req.body;
   try {
@@ -170,7 +171,7 @@ router.get('/balance', async (req, res) => {
   }
 });
 
-// handling the delete request
+// handling item deleting request
 router.delete('/:id', async (req, res) => {
   const {id} = req.params;
   try {
