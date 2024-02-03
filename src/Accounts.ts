@@ -2,6 +2,7 @@ import express from "express";
 import {Prisma, PrismaClient} from "@prisma/client";
 import jwt from "jsonwebtoken";
 import {getUserByJWT} from "./Tags.js";
+import {log} from "console";
 
 const prisma = new PrismaClient();
 
@@ -27,13 +28,14 @@ router.post('/', async (req, res) => {
     if (!user) {
       return res.status(401).json({error: 'User not found.(Message from server)'});
     }
+    const utc_happened_at = isoStandardize(happened_at);
     const account = await prisma.accounts.create(
       {
         data: {
           user_id: user?.id,
           amount,
           kind,
-          happened_at,
+          happened_at: utc_happened_at,
           tag_id
         }
       }
