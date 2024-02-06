@@ -3,6 +3,8 @@ services:
   bookkeeper:
     build: .
     image: towski0804/bookkeeper:latest
+    env_file:
+      - .env
     ports:
       - "4000:4000"
     depends_on:
@@ -11,7 +13,11 @@ services:
       DATABASE_URL: ${DATABASE_URL}
   mypostgres:
     image: postgres:latest
+    ports:
+      - "5432:5432"
     volumes:
       - mypostgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: 123123
 volumes:
   mypostgres:

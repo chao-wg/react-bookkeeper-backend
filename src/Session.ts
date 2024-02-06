@@ -44,6 +44,7 @@ router.post('/', async (req, res) => {
       res.status(422).json({"errors": {"email": ["Email or code is invalid"]}});
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({error: 'An error occurred during verification'});
   } finally {
     await prisma.$disconnect(); // Disconnect the Prisma client after all database operations are completed

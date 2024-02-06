@@ -11,4 +11,4 @@ set the DATABASE_URL to the following format
 #### For docker deployment
 
 set the DATABASE_URL to the following format
-```DATABASE_URL=DBprovider://following:somePwd@host.docker.internal:5432/mydb?schema=yourSchema```
+```DATABASE_URL=DBprovider://following:somePwd@containerName:5432/mydb?schema=yourSchema```
