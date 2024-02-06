@@ -15,8 +15,9 @@ RUN npm install
 COPY dist/ ./dist
 COPY prisma/ ./prisma
 
+COPY start.sh ./
+RUN chmod +x start.sh
+
 RUN npx prisma generate
 
-EXPOSE 3000
-
-CMD [ "npm", "start" ]
+CMD ["./start.sh"]

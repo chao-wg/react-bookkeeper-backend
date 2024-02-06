@@ -1,0 +1,17 @@
+version: '3'
+services:
+  bookkeeper:
+    build: .
+    image: towski0804/bookkeeper:latest
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mypostgres
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+  mypostgres:
+    image: postgres:latest
+    volumes:
+      - mypostgres:/var/lib/postgresql/data
+volumes:
+  mypostgres:
