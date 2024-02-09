@@ -9,7 +9,7 @@ RUN apt-get update -y && apt-get install -y openssl
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-RUN npm install
+RUN pnpm install
 
 # Copy the source code
 COPY dist/ ./dist
@@ -18,6 +18,6 @@ COPY prisma/ ./prisma
 COPY start.sh ./
 RUN chmod +x start.sh
 
-RUN npx prisma generate
+RUN pnpm dlx prisma generate
 
 CMD ["./start.sh"]
