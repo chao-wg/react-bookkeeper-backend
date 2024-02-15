@@ -1,5 +1,7 @@
 FROM node:18.16.0-bookworm-slim
 
+RUN npm install -g pnpm
+
 # Set the working directory in the Docker image
 WORKDIR /usr/src/app
 
