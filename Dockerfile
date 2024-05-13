@@ -1,4 +1,4 @@
-FROM node:18.16.0-bookworm-slim
+FROM node:18-bookworm-slim
 
 RUN npm install -g pnpm
 

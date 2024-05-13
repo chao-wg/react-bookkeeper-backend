@@ -1,7 +1,6 @@
 version: '3'
 services:
   bookkeeper:
-    build: .
     image: towski0804/bookkeeper:latest
     env_file:
       - .env
