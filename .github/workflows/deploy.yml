@@ -55,7 +55,7 @@ jobs:
         run: |
           echo "$SSH_PRIVATE_KEY" > private_key
           chmod 600 private_key
-          ssh -i private_key -o StrictHostKeyChecking=no $USER@$HOST 'docker compose -f /root/www/bkp/docker-compose.yml down && sudo rm -f /root/www/bkp/docker-compose.yml'
+          ssh -i private_key -o StrictHostKeyChecking=no $USER@$HOST 'docker compose -f /root/www/bkp/docker-compose.yml down || true && sudo rm -f /root/www/bkp/docker-compose.yml'
           scp -i private_key -o StrictHostKeyChecking=no docker-compose.yml $USER@$HOST:/root/www/bkp/docker-compose.yml
           ssh -i private_key -o StrictHostKeyChecking=no $USER@$HOST <<EOF
             docker compose -f /root/www/bkp/docker-compose.yml pull
