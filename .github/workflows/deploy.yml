@@ -6,7 +6,26 @@ on:
       - main
 
 jobs:
+  check-skip-ci:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for [skip ci] in commit message
+        id: check
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]]; then
+            echo "::set-output name=skip::true"
+          else
+            echo "::set-output name=skip::false"
+          fi
+
   build-and-deploy:
+    needs: check-skip-ci
+    if: needs.check-skip-ci.outputs.skip == 'false'
     runs-on: ubuntu-latest
 
     steps:
