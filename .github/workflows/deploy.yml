@@ -41,11 +41,11 @@ jobs:
           ssh -i private_key -o StrictHostKeyChecking=no $USER@$HOST <<EOF
             docker compose -f /root/www/bkp/docker-compose.yml down
             sudo rm -f /root/www/bkp/docker-compose.yml
-EOF
+            EOF
           scp -i private_key -o StrictHostKeyChecking=no docker-compose.yml $USER@$HOST:/root/www/bkp/docker-compose.yml
           ssh -i private_key -o StrictHostKeyChecking=no $USER@$HOST <<EOF
             docker compose -f /root/www/bkp/docker-compose.yml pull
             docker compose -f /root/www/bkp/docker-compose.yml up -d
             docker system prune -f
-EOF
+            EOF
           rm -rf private_key
